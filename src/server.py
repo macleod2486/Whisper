@@ -18,6 +18,7 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import socket
+import os.path
 import linecache
 from Crypto.PublicKey import RSA
 
@@ -26,7 +27,7 @@ username = "default"
 port = 12345
 #Obtains the necessary info from config files
 try:
-        username = linecache.getline('../etc/whisper.cfg',2)
+        username = linecache.getline(os.path.dirname(__file__)+'/etc/whisper.cfg',2)
         username = username.split('=',1)[1]
         port = linecache.getline('../etc/whisper.cfg', 3)
 	port = port.split('=',1)[1]
@@ -55,7 +56,7 @@ while True:
 	
 	try:
 
-		privateKeyFile = open("../keys/"+username+".pem","r")
+		privateKeyFile = open(os.path.dirname(__file__)+"/keys/"+username+".pem","r")
 		privateKey = RSA.importKey(privateKeyFile.read())
 
 	except:

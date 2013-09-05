@@ -18,6 +18,7 @@
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
 import socket
+import os.path
 import linecache
 from Crypto.PublicKey import RSA
 
@@ -29,7 +30,7 @@ username = "default"
 recipantUser = " "
 #Obtains the necessary info from config files
 try:
-	username = linecache.getline('../etc/whisper.cfg',2)
+	username = linecache.getline(os.path.dirname(__file__)+'/etc/whisper.cfg',2)
 	username = username.split('=',1)[1]
 	username = username[:-1]
 	print("Username is "+username)
@@ -41,22 +42,22 @@ except:
 #Try catch block to determine if the keys are there
 try:
 	#Checks for private key
-        checkPrFile = open("../keys/"+username+".key","r")
+        checkPrFile = open(os.path.dirname(__file__)+'/keys/'+username+'.key','r')
         privateKey = RSA.importKey(checkPrFile.read())
         checkPrFile.close()
 	
 	#Checks for public key
-        checkPuFile = open("../keys/"+username+"pub.key","r")
+        checkPuFile = open(os.path.dirname(__file__)+'/keys/'+username+'pub.key','r')
         publicKey = RSA.importKey(checkPuFile.read())
         checkPuFile.close()
 except:
         #Writing private key to file
-        privateKeyFile = open("../keys/"+username+".key","w")
+	privateKeyFile = open(os.path.dirname(__file__)+"/../keys/"+username+".key",'w')
         privateKeyFile.write(privateKey.exportKey())
         privateKeyFile.close()
 
         #Writing public key to file
-        publicKeyFile = open("../keys/"+username+"pub.key","w")
+        publicKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','w')
 	publicKeyFile.write(publicKey.exportKey())
         publicKeyFile.close()
 
