@@ -28,9 +28,41 @@ publicKey = privateKey.publickey()
 username = "default"
 
 recipantUser = " "
+#Creates the socket
+clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+host = socket.gethostname()
+port = 3333
+
+#Function that will take in commands 
+def Commands (arguments):
+	command = arguments.split(' ')
+	if command[0]=="help":
+		print("Help list")
+	elif command[0]=="connect":
+		try:
+			clientSocket.connect((command[1],int(command[2])))
+			recipantUser=clientSocket.recv(1024)
+			print("Connected to "+recipantUser)
+			#Proceeds to then send and recieve messages from the server
+			clientSocket.send(username)
+		except:
+			print("Error in connecting")
+		try:
+			 #Checks for public key
+			checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
+		        publicKey = RSA.importKey(checkPuFile.read())
+		        checkPuFile.close()
+			print(recipantUser+"'s public key being used")
+		except:
+			print("Error in obtaining users public key")
+	elif command[0] == 'disconnect':
+		print("Disconnecting")
+	else:
+		"Error in selecting commands"
+
 #Obtains the necessary info from config files
 try:
-	username = linecache.getline(os.path.dirname(__file__)+'/etc/whisper.cfg',2)
+	username = linecache.getline('../etc/whisper.cfg',2)
 	username = username.split('=',1)[1]
 	username = username[:-1]
 	print("Username is "+username)
@@ -42,15 +74,16 @@ except:
 #Try catch block to determine if the keys are there
 try:
 	#Checks for private key
-        checkPrFile = open(os.path.dirname(__file__)+'/keys/'+username+'.key','r')
+        checkPrFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','r')
         privateKey = RSA.importKey(checkPrFile.read())
         checkPrFile.close()
 	
 	#Checks for public key
-        checkPuFile = open(os.path.dirname(__file__)+'/keys/'+username+'pub.key','r')
+        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','r')
         publicKey = RSA.importKey(checkPuFile.read())
         checkPuFile.close()
 except:
+	print("Your keys were not found creating new ones....")
         #Writing private key to file
 	privateKeyFile = open(os.path.dirname(__file__)+"/../keys/"+username+".key",'w')
         privateKeyFile.write(privateKey.exportKey())
@@ -61,19 +94,19 @@ except:
 	publicKeyFile.write(publicKey.exportKey())
         publicKeyFile.close()
 
-#Creates the socket
-clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-host = socket.gethostname()
-port = 3333
-clientSocket.connect((host, int(port)))
-
-
-#Proceeds to then send and recieve messages from the server
-clientSocket.send(username)
+#Takes in user commands and messages
 while True:
 	msg = raw_input(":")
-	msg=publicKey.encrypt(msg,2)
-	clientSocket.send(msg[0])
-	cliMsg = clientSocket.recv(1024)
-	print(cliMsg)
+	if msg=="/quit":
+		break
+	elif msg[0]=='/':
+		Commands(msg[1:])
+	else:
+		try:
+			msg=publicKey.encrypt(msg,2)
+			clientSocket.send(msg[0])
+			cliMsg = clientSocket.recv(1024)
+			print(cliMsg)
+		except:
+			print("Error in sending message")
 clientSocket.close()
