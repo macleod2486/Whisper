@@ -22,14 +22,15 @@ import os.path
 import linecache
 from Crypto.PublicKey import RSA
 
-privateKey = ""
+privateKey = RSA.generate(1024)
 username = "default"
 port = 12345
 #Obtains the necessary info from config files
 try:
-        username = linecache.getline(os.path.dirname(__file__)+'/etc/whisper.cfg',2)
+        username = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',2)
         username = username.split('=',1)[1]
-        port = linecache.getline('../etc/whisper.cfg', 3)
+	username = username[:-1]
+        port = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg', 3)
 	port = port.split('=',1)[1]
 	print("Username is "+username)
 	print("Listening on port "+port)	
@@ -49,22 +50,20 @@ print("Server started")
 print("Got connection from ",addr)
 
 #Sends and recieves messages from the client
+c.send(username)
 senderUsername=c.recv(1024)
-
 while True:
-	clientMess=c.recv(1024)
-	
+	clientMess=c.recv(1024)	
 	try:
-
-		privateKeyFile = open(os.path.dirname(__file__)+"/keys/"+username+".pem","r")
+		filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
+		print(filepath)
+		privateKeyFile = open(filepath,"r")
 		privateKey = RSA.importKey(privateKeyFile.read())
+		clientMess=privateKey.decrypt(clientMess)
+	        print(senderUsername+":"+clientMess)
+		c.send(str(clientMess))
 
 	except:
         	print("Error in obtaining key")
-		break
-	clientMess=privateKey.decrypt(clientMess)	
-	print(senderUsername+":"+clientMess) 
-	c.send(str(clientMess))
-	if(clientMess=="quit"):
 		break
 serverSocket.close()
