@@ -20,6 +20,7 @@
 import socket
 import os.path
 import linecache
+from Tkinter import *
 from Crypto.PublicKey import RSA
 
 #Obtaining the key
@@ -40,10 +41,12 @@ def Commands (arguments):
 		print("Help list")
 	elif command[0]=="connect":
 		try:
-			clientSocket.connect((command[1],int(command[2])))
+			host = command[1]
+			port = command[2]
+			clientSocket.connect((host,int(port)))
 			recipantUser=clientSocket.recv(1024)
+			#Displays on who you are connected to
 			print("Connected to "+recipantUser)
-			#Proceeds to then send and recieve messages from the server
 			clientSocket.send(username)
 		except:
 			print("Error in connecting")
@@ -60,53 +63,78 @@ def Commands (arguments):
 	else:
 		"Error in selecting commands"
 
-#Obtains the necessary info from config files
-try:
-	username = linecache.getline('../etc/whisper.cfg',2)
-	username = username.split('=',1)[1]
-	username = username[:-1]
-	print("Username is "+username)
-
-except:
-	print("Error in config file!")
-	exit(1)
-
-#Try catch block to determine if the keys are there
-try:
-	#Checks for private key
-        checkPrFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','r')
-        privateKey = RSA.importKey(checkPrFile.read())
-        checkPrFile.close()
+def keyCheck():
+	#Try catch block to determine if the keys are there
+	try:
+		#Checks for private key
+	        checkPrFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','r')
+        	privateKey = RSA.importKey(checkPrFile.read())
+	        checkPrFile.close()
 	
-	#Checks for public key
-        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','r')
-        publicKey = RSA.importKey(checkPuFile.read())
-        checkPuFile.close()
-except:
-	print("Your keys were not found creating new ones....")
-        #Writing private key to file
-	privateKeyFile = open(os.path.dirname(__file__)+"/../keys/"+username+".key",'w')
-        privateKeyFile.write(privateKey.exportKey())
-        privateKeyFile.close()
+		#Checks for public key
+	        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','r')
+	        publicKey = RSA.importKey(checkPuFile.read())
+	        checkPuFile.close()
+		print("Keys loaded")
+	except:
+		print("Your keys were not found creating new ones....")
+	        #Writing private key to file
+		privateKeyFile = open(os.path.dirname(__file__)+"/../keys/"+username+".key",'w')
+        	privateKeyFile.write(privateKey.exportKey())
+	        privateKeyFile.close()
 
-        #Writing public key to file
-        publicKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','w')
-	publicKeyFile.write(publicKey.exportKey())
-        publicKeyFile.close()
+        	#Writing public key to file
+	        publicKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'pub.key','w')
+		publicKeyFile.write(publicKey.exportKey())
+	        publicKeyFile.close()
 
 #Takes in user commands and messages
-while True:
-	msg = raw_input(":")
+def sendMessage():
+	msg = input.get()
+	input.delete(0,END)
 	if msg=="/quit":
-		break
+		exit(1)
 	elif msg[0]=='/':
 		Commands(msg[1:])
 	else:
 		try:
 			msg=publicKey.encrypt(msg,2)
 			clientSocket.send(msg[0])
+			display.insert(END, username+":"+msg+"\n")
 			cliMsg = clientSocket.recv(1024)
 			print(cliMsg)
 		except:
+			display.insert(END, "Error in sending message\n")
 			print("Error in sending message")
+
+
+#Obtains the necessary info from config files
+try:
+        username = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',2)
+        username = username.split('=',1)[1]
+        username = username[:-1]
+        print("Username is "+username)
+
+except:
+        print("Error in config file!")
+        exit(1)
+
+#-----------------------------
+#Main running of the code
+root = Tk()
+root.title("Whisper")
+
+keyCheck()
+
+serverButton = Button(root, text="Send Message",command=sendMessage)
+serverButton.grid(row=1, column=1)
+
+input = Entry(root, width=60)
+input.grid(row=1,column=0)
+
+display = Text(root, width=60, height=40)
+display.grid(row=0, column=0)
+
+root.mainloop()
+
 clientSocket.close()
