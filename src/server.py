@@ -61,7 +61,7 @@ while True:
 		privateKey = RSA.importKey(privateKeyFile.read())
 		clientMess=privateKey.decrypt(clientMess)
 	        print(senderUsername+":"+clientMess)
-		c.send(str(clientMess))
+#		c.send(str(clientMess))
 
 	except:
         	print("Error in obtaining key")
