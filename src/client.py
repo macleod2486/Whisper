@@ -99,6 +99,7 @@ def server():
 def sendMessage():
 	
 	msg = input.get()
+	cliMsg = msg
 	input.delete(0,END)
 	if msg=="/quit":
 		exit(1)
@@ -108,7 +109,7 @@ def sendMessage():
 		try:
 			msg=publicKey.encrypt(msg,2)
 			clientSocket.send(msg[0])
-			cliMsg = clientSocket.recv(1024)
+	#		cliMsg = clientSocket.recv(1024)
 			display.insert(END, username+":"+cliMsg+"\n")
 			print(cliMsg)
 		except Exception as e:
