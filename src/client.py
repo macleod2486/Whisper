@@ -21,13 +21,13 @@ import socket
 import os.path
 import linecache
 from Tkinter import *
-from Crypto.PublicKey import RSA
+#from Crypto.PublicKey import RSA
+import Crypto.PublicKey.RSA
 
 #Obtaining the key
-privateKey = RSA.generate(1024)
-publicKey = privateKey.publickey()
+privateKey = None
+publicKey = None
 username = "default"
-
 recipantUser = " "
 #Creates the socket
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -42,27 +42,31 @@ def Commands (arguments):
 		print("Help list")
 	elif command[0]=="connect":
 		try:
+			global recipantUser
 			host = command[1]
 			port = command[2]
 			clientSocket.connect((host,int(port)))
 			recipantUser=clientSocket.recv(1024)
-			#recipantUser = recipantUser[:-1]
 			
 			#Displays on who you are connected to
 			print("Connected to "+recipantUser)
+			display.insert(END,recipantUser+"\n")
 			clientSocket.send(username)
 		except Exception as e:
 			print("Error in connecting")
 			print(e)
-		try:
-			 #Checks for public key
-			checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
-		        publicKey = RSA.importKey(checkPuFile.read())
-		        checkPuFile.close()
-			print(recipantUser+"'s public key being used")
-		except Exception as e:
-			print("Error in obtaining users public key")
-			print(e)
+		#Then checks to see if the users public key exists
+                try:
+                #Checks for public key
+                        global publicKey
+                        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
+                        publicKey = Crypto.PublicKey.RSA.importKey(checkPuFile.read())
+                        checkPuFile.close()
+                        print(recipantUser+"'s public key being used")
+                except Exception as e:
+                        print("Error in obtaining users public key")
+                        print(e)
+		
 	elif command[0] == 'disconnect':
 		print("Disconnecting")
 	else:
@@ -70,6 +74,8 @@ def Commands (arguments):
 
 #Checks and/or creates keys
 def keyCreate():
+	privateKey = RSA.generate(1024)
+	publicKey = privateKey.publicKey()
 
 	try:
 		#Checks for private key
@@ -88,56 +94,10 @@ def keyCreate():
 
 #Server function
 def server():
-	#Obtains the necessary info from config files
-	try:
-        	username = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',2)
-	        username = username.split('=',1)[1]
-		username = username[:-1]
-	        port = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg', 3)
-		port = port.split('=',1)[1]
-		print("Username is "+username)
-	
-	except:
-        	print("Error in config file!")
-	        exit(1)
-
-	#Creates the sockets and waits for connections to show up
-	serverSocket = socket.socket()
-	host = socket.gethostbyname(socket.gethostname())
-	serverSocket.bind((host,int(port)))
-
-	print("Listening on "+host+"Port "+port)
-
-	serverSocket.listen(5)
-	c,addr = serverSocket.accept()
-
-	#Once the socket is created it will notifify you
 	print("Server started")
-	print("Got connection from ",addr)
-
-	#Sends and recieves messages from the client
-	c.send(username)
-	senderUsername=c.recv(1024)
-
-	#Then continues to recieve messages and decrypt them with your private key
-	while True:
-		clientMess=c.recv(1024)	
-		try:
-			filepath = "../keys/"+username+".key"
-			print(filepath)
-			privateKeyFile = open(filepath,"r")
-			privateKey = RSA.importKey(privateKeyFile.read())
-			clientMess=privateKey.decrypt(clientMess)
-	       		print(senderUsername+":"+clientMess)
-			c.send(str(clientMess))
-
-		except:
-        		print("Error in obtaining key")
-			break
-		serverSocket.close()
-
 #Takes in user commands and messages
 def sendMessage():
+	
 	msg = input.get()
 	input.delete(0,END)
 	if msg=="/quit":
@@ -148,15 +108,13 @@ def sendMessage():
 		try:
 			msg=publicKey.encrypt(msg,2)
 			clientSocket.send(msg[0])
-			display.insert(END, username+":"+msg[0]+"\n")
 			cliMsg = clientSocket.recv(1024)
 			display.insert(END, username+":"+cliMsg+"\n")
 			print(cliMsg)
 		except Exception as e:
-			display.insert(END, "Error in sending message\n")
-			display.insert(END, e+"\n")
+			#display.insert(END, "Error in sending message\n")
+			display.insert(END, str(e)+"\n")
 			print("Error in sending message")
-
 
 #Obtains the necessary info from config files
 try:
