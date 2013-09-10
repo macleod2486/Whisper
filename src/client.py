@@ -31,6 +31,7 @@ username = "default"
 recipantUser = " "
 #Creates the socket
 clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 host = socket.gethostname()
 port = 3333
 
