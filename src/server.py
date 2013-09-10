@@ -22,7 +22,7 @@ import os.path
 import linecache
 from Crypto.PublicKey import RSA
 
-privateKey = RSA.generate(1024)
+privateKey = None
 username = "default"
 port = 12345
 #Obtains the necessary info from config files
@@ -42,6 +42,7 @@ except:
 #Creates the sockets and waits for connections to show up
 serverSocket = socket.socket()
 host = socket.gethostname()
+serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 serverSocket.bind((host,int(port)))
 serverSocket.listen(5)
 c,addr = serverSocket.accept()
@@ -55,13 +56,13 @@ senderUsername=c.recv(1024)
 while True:
 	clientMess=c.recv(1024)	
 	try:
+		global privateKey
 		filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
 		print(filepath)
 		privateKeyFile = open(filepath,"r")
 		privateKey = RSA.importKey(privateKeyFile.read())
 		clientMess=privateKey.decrypt(clientMess)
 	        print(senderUsername+":"+clientMess)
-#		c.send(str(clientMess))
 
 	except:
         	print("Error in obtaining key")
