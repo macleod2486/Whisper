@@ -39,8 +39,13 @@ port = 3333
 #Function that will take in commands 
 def Commands (arguments):
 	command = arguments.split(' ')
+
+	#Displays help menu when prompted
 	if command[0]=="help":
-		print("Help list")
+		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
+		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n")
+
+	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
 		try:
 			global recipantUser
@@ -51,7 +56,7 @@ def Commands (arguments):
 			
 			#Displays on who you are connected to
 			print("Connected to "+recipantUser)
-			display.insert(END,recipantUser+"\n")
+			display.insert(END,"Connected to "+recipantUser+"\n")
 			clientSocket.send(username)
 		except Exception as e:
 			print("Error in connecting")
@@ -63,13 +68,19 @@ def Commands (arguments):
                         checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
                         publicKey = Crypto.PublicKey.RSA.importKey(checkPuFile.read())
                         checkPuFile.close()
-                        print(recipantUser+"'s public key being used")
+			display.insert(END,recipantUser+"'s public key being used")
                 except Exception as e:
                         print("Error in obtaining users public key")
+			display.insert(END,"Error in obtaining users public key\n")
                         print(e)
-		
+
+	#Will disconnect from server when prompted		
 	elif command[0] == 'disconnect':
 		print("Disconnecting")
+	
+	#Clears the text displayed in the chat window
+	elif command[0] == 'clear':
+		display.delete('1.0',END)
 	else:
 		display.insert(END,"Error in selecting commands\n")
 
@@ -110,7 +121,6 @@ def sendMessage():
 		try:
 			msg=publicKey.encrypt(msg,2)
 			clientSocket.send(msg[0])
-	#		cliMsg = clientSocket.recv(1024)
 			display.insert(END, username+":"+cliMsg+"\n")
 			print(cliMsg)
 		except Exception as e:
