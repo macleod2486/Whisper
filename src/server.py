@@ -55,16 +55,19 @@ c.send(username)
 senderUsername=c.recv(1024)
 while True:
 	clientMess=c.recv(1024)	
-	try:
-		global privateKey
-		filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
-		print(filepath)
-		privateKeyFile = open(filepath,"r")
-		privateKey = RSA.importKey(privateKeyFile.read())
-		clientMess=privateKey.decrypt(clientMess)
-	        print(senderUsername+":"+clientMess)
-
-	except:
-        	print("Error in obtaining key")
+	if not clientMess:
 		break
+	else:
+		try:
+			global privateKey
+			filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
+			print(filepath)
+			privateKeyFile = open(filepath,"r")
+			privateKey = RSA.importKey(privateKeyFile.read())
+			clientMess=privateKey.decrypt(clientMess)
+			print(senderUsername+":"+clientMess)
+
+		except Exception as e:
+        		print("Error in obtaining key"+str(e))
+			break
 serverSocket.close()
