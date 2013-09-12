@@ -7,7 +7,8 @@ of server-client relations.
 
 This currently is still very alpha but will mature over time.
 
-You first start the server to recieve messages or start the client and connect.
+Currently the only way it works is by starting the server and client script file independentely.
 
-
-A better help menu will be created once the basic features are decided upon
+Current near future goals
+- Merge both the server and client script files together
+- Encrypt the private keys and require a password to unlock
