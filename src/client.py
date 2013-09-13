@@ -19,9 +19,11 @@
 
 import socket
 import os.path
+import os
 import linecache
 from Tkinter import *
-#from Crypto.PublicKey import RSA
+import threading
+from Crypto.PublicKey import RSA
 import Crypto.PublicKey.RSA
 
 #Obtaining the key
@@ -30,8 +32,10 @@ publicKey = None
 username = "default"
 recipantUser = " "
 #Creates the socket
-clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+clientSocket = None
+serverSocket = None
+#clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 host = socket.gethostname()
 port = 3333
 
@@ -43,41 +47,53 @@ def Commands (arguments):
 	#Displays help menu when prompted
 	if command[0]=="help":
 		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
+		display.config(state="normal")
 		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n")
-
+		display.config(state="disabled")
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
 		try:
-			global recipantUser
+			global recipantUser, clientSocket
 			host = command[1]
 			port = command[2]
+			clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		
 			clientSocket.connect((host,int(port)))
 			recipantUser=clientSocket.recv(1024)
 			
 			#Displays on who you are connected to
 			print("Connected to "+recipantUser)
-			display.insert(END,"Connected to "+recipantUser+"\n")
+			display.config(state="normal")
+			display.insert(END,"\nConnected to "+recipantUser+"\n")
+			display.config(state="disabled")
 			clientSocket.send(username)
 		except Exception as e:
 			print("Error in connecting")
 			print(e)
 		#Then checks to see if the users public key exists
                 try:
-                #Checks for public key
+	                #Checks for public key
                         global publicKey
                         checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
-                        publicKey = Crypto.PublicKey.RSA.importKey(checkPuFile.read())
+                        publicKey = RSA.importKey(checkPuFile.read())
                         checkPuFile.close()
-			display.insert(END,recipantUser+"'s public key being used")
+			display.config(state="normal")
+			display.insert(END,'\n'+recipantUser+"'s public key being used\n")
+			display.config(state="disabled")
                 except Exception as e:
                         print("Error in obtaining users public key")
-			display.insert(END,"Error in obtaining users public key\n")
+			display.insert(END,"Error in obtaining"+recipantUser+"'s public key\n")
                         print(e)
 
 	#Will disconnect from server when prompted		
 	elif command[0] == 'disconnect':
-		print("Disconnecting")
-	
+		try:
+			clientSocket.shutdown(2)
+			clientSocket.close()
+			print("Disconnected")
+		except:
+			print("No connection")
 	#Clears the text displayed in the chat window
 	elif command[0] == 'clear':
 		display.delete('1.0',END)
@@ -100,13 +116,81 @@ def keyCreate():
 		publicKeyFile.write(publicKey.exportKey())
 	        publicKeyFile.close()
 		print("Keys create")
+		display.config(state="normal")
+		display.insert(END,"Keys created\n")
+		display.config(state="disabled")
 	except Exception as e:
 		print("Error creating keys")
 		print(e)
 
+	
+#Server class
+class Server(threading.Thread):
+	def run(self):
+		serverPort = None
+		#Obtains the necessary info from config files
+		try:
+		        serverPort = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg', 3)
+			serverPort.split('=',1)[1]
+		        print("Listening on port "+serverPort)        
+        
+		except Exception as e:
+		        print("Error in config file!"+str(e))
+	        #exit(1)
+
+		#Creates the sockets and waits for connections to show up
+		global serverSocket
+		serverSocket = socket.socket()
+		serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+		serverSocket.bind((host,int(port)))
+
+		display.config(state="normal")
+		display.insert(END,"Server started\n")
+		display.config(state="disabled")
+		
+		serverSocket.listen(1)
+		c,addr = serverSocket.accept()
+		
+		print("Server started")
+		print("Got connection from ",addr)
+		
+		#Sends and recieves messages from the client
+		c.send(username)
+		senderUsername=c.recv(1024)
+		while True:
+	        	clientMess=c.recv(1024) 
+		        if not clientMess:
+        		        print(str(clientMess))
+				break
+		        else:
+	        	        try:
+	                	        global privateKey
+	                        	filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
+	        	                privateKeyFile = open(filepath,"r")
+		                        privateKey = RSA.importKey(privateKeyFile.read())
+					privateKeyFile.close()
+		                        clientMess=privateKey.decrypt(clientMess)
+		                        print(senderUsername+":"+clientMess)
+					display.config(state="normal")
+					display.insert(END,senderUsername+":"+clientMess+'\n')
+					display.config(state="disabled")
+		                except Exception as e:
+		                        print("Error in obtaining key"+str(e))
+		                        break
+		serverSocket.close()
+		print ("Server closed")
+
 #Server function
-def server():
-	print("Server started")
+def singleServer():
+	server = Server()
+	server.start()
+def stopServer():
+	try:
+		serverSocket.shutdown(2)
+		serverSocket.close()
+		print("Server stopped")
+	except:
+		print("Server already stopped")
 #Takes in user commands and messages
 def sendMessage():
 	
@@ -114,14 +198,19 @@ def sendMessage():
 	cliMsg = msg
 	input.delete(0,END)
 	if msg=="/quit":
+		Commands("disconnect")
+		stopServer()
 		exit(1)
 	elif msg[0]=='/':
 		Commands(msg[1:])
 	else:
 		try:
+			global clientSocket
 			msg=publicKey.encrypt(msg,2)
 			clientSocket.send(msg[0])
+			display.config(state="normal")
 			display.insert(END, username+":"+cliMsg+"\n")
+			display.config(state="disabled")
 			print(cliMsg)
 		except Exception as e:
 			#display.insert(END, "Error in sending message\n")
@@ -152,17 +241,20 @@ input = Entry(root, width=60)
 input.grid(row=1,column=0)
 
 display = Text(root, width=60, height=40)
+display.configure(state="disabled")
 display.grid(row=0, column=0)
 
 generateKeys = Button(root, text="Generate keys", command=keyCreate)
 generateKeys.grid(row=2, column=1)
 
-startServer = Button(root, text = "Start Server", command=server)
+startServer = Button(root, text = "Start Server", command=singleServer)
 startServer.grid(row=2, column=2)
 
-stopServer = Button(root, text="Stop Server", command=server)
-stopServer.grid(row=1, column=2)
+#stopServer = Button(root, text="Stop Server", command=singleServer)
+#stopServer.grid(row=1, column=2)
 
 root.mainloop()
 
-clientSocket.close()
+#Cleans up connections when GUI is closed
+Commands("disconnect")
+stopServer()
