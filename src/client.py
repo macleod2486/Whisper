@@ -92,8 +92,14 @@ def Commands (arguments):
 			clientSocket.shutdown(2)
 			clientSocket.close()
 			print("Disconnected")
+			display.config(state="normal")
+			display.insert(END,"Disconnected\n")
+			display.config(state="disabled")
 		except:
 			print("No connection")
+			display.config(state="normal")
+			display.insert(END,"No connection")
+			display.config(state="disabled")
 	#Clears the text displayed in the chat window
 	elif command[0] == 'clear':
 		display.delete('1.0',END)
@@ -197,12 +203,15 @@ def sendMessage():
 	msg = input.get()
 	cliMsg = msg
 	input.delete(0,END)
+	#Quits the system and exits
 	if msg=="/quit":
 		Commands("disconnect")
 		stopServer()
 		exit(1)
+	#If a command is issued then it will shoot it to the correc
 	elif msg[0]=='/':
 		Commands(msg[1:])
+	#Attempts to send the message to the server
 	else:
 		try:
 			global clientSocket
@@ -213,8 +222,9 @@ def sendMessage():
 			display.config(state="disabled")
 			print(cliMsg)
 		except Exception as e:
-			#display.insert(END, "Error in sending message\n")
-			display.insert(END, str(e)+"\n")
+			display.config(state="normal")
+			display.insert(END, "Error in sending message\n")
+			display.config(state="disabled")
 			print("Error in sending message")
 
 #Obtains the necessary info from config files
