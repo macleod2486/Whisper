@@ -48,7 +48,7 @@ def Commands (arguments):
 	if command[0]=="help":
 		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
 		display.config(state="normal")
-		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n")
+		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n/keygen password password\n/unlock password")
 		display.config(state="disabled")
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
@@ -100,21 +100,35 @@ def Commands (arguments):
 			display.config(state="normal")
 			display.insert(END,"No connection")
 			display.config(state="disabled")
+	#Generates the keys with the password specified
+	elif command[0] == 'keygen':
+		if command[1] == command[2]:
+			keyCreate(command[1])
+		else:
+			display.config(state="normal")
+			display.insert(END,"Error: passwords do not match\n")
+			display.config(state="disabled")
+	elif command[0] == 'unlock':
+		keyUnlock(command[1])
 	#Clears the text displayed in the chat window
 	elif command[0] == 'clear':
+		display.config(state="normal")
 		display.delete('1.0',END)
+		display.config(state="disabled")
 	else:
+		display.config(state="normal")
 		display.insert(END,"Error in selecting commands\n")
+		display.config(state="disabled")
 
 #Checks and/or creates keys
-def keyCreate():
-	privateKey = RSA.generate(1024)
-	publicKey = privateKey.publicKey()
-
+def keyCreate(password):
+	global privateKey
 	try:
+		privateKey = RSA.generate(1024)
+		publicKey = privateKey.publickey()
 		#Checks for private key
 	        privateKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','w')
-		privateKeyFile.write(privateKey.exportKey())
+		privateKeyFile.write(privateKey.exportKey('PEM',password,pkcs=1))
 	        privateKeyFile.close()
 
 		#Checks for public key
@@ -129,7 +143,19 @@ def keyCreate():
 		print("Error creating keys")
 		print(e)
 
-	
+def keyUnlock(password):
+		try:
+			global privateKey
+			privateKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','r')
+			privateKey = RSA.importKey(privateKeyFile.read(),password)
+			privateKeyFile.close()
+			display.config(state="normal")
+			display.insert(END,"Keys unlocked")
+			display.config(state="disabled")
+		except Exception as e:
+			display.config(state="normal")
+			display.insert(END,"Error in unlocking key\nBad passphrase or file does not exist\nError"+str(e)+'\n')
+			display.config(state="disabled")
 #Server class
 class Server(threading.Thread):
 	def run(self):
@@ -170,18 +196,14 @@ class Server(threading.Thread):
 				break
 		        else:
 	        	        try:
-	                	        global privateKey
-	                        	filepath = os.path.dirname(__file__)+"/../keys/"+username+".key"
-	        	                privateKeyFile = open(filepath,"r")
-		                        privateKey = RSA.importKey(privateKeyFile.read())
-					privateKeyFile.close()
+					global privateKey
 		                        clientMess=privateKey.decrypt(clientMess)
 		                        print(senderUsername+":"+clientMess)
 					display.config(state="normal")
 					display.insert(END,senderUsername+":"+clientMess+'\n')
 					display.config(state="disabled")
 		                except Exception as e:
-		                        print("Error in obtaining key"+str(e))
+		                        print("Error in key"+str(e))
 		                        break
 		serverSocket.close()
 		print ("Server closed")
@@ -254,11 +276,8 @@ display = Text(root, width=60, height=40)
 display.configure(state="disabled")
 display.grid(row=0, column=0)
 
-generateKeys = Button(root, text="Generate keys", command=keyCreate)
-generateKeys.grid(row=2, column=1)
-
 startServer = Button(root, text = "Start Server", command=singleServer)
-startServer.grid(row=2, column=2)
+startServer.grid(row=1, column=2)
 
 #stopServer = Button(root, text="Stop Server", command=singleServer)
 #stopServer.grid(row=1, column=2)
