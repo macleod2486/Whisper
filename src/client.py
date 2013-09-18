@@ -48,7 +48,7 @@ def Commands (arguments):
 	if command[0]=="help":
 		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
 		display.config(state="normal")
-		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n/keygen password password\n/unlock password")
+		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n/keygen password password\n/unlock password\n")
 		display.config(state="disabled")
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
@@ -150,7 +150,7 @@ def keyUnlock(password):
 			privateKey = RSA.importKey(privateKeyFile.read(),password)
 			privateKeyFile.close()
 			display.config(state="normal")
-			display.insert(END,"Keys unlocked")
+			display.insert(END,"Keys unlocked\n")
 			display.config(state="disabled")
 		except Exception as e:
 			display.config(state="normal")
@@ -219,6 +219,14 @@ def stopServer():
 		print("Server stopped")
 	except:
 		print("Server already stopped")
+def stopClient():
+	try:
+		clientSocket.shutdown(2)
+                clientSocket.close()
+                print("Disconnected")
+        except:
+                print("No connection")
+                
 #Takes in user commands and messages
 def sendMessage():
 	
@@ -285,5 +293,5 @@ startServer.grid(row=1, column=2)
 root.mainloop()
 
 #Cleans up connections when GUI is closed
-Commands("disconnect")
+stopClient()
 stopServer()
