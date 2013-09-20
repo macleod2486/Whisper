@@ -16,28 +16,28 @@ This currently is still very alpha but will mature over time.  I will not recomm
 
 ### Current near future goals
 
-[x] Encrypt the private keys and require a password to unlock
-[ ] Make more efficient
-[ ] Allow multiple users to connect
-[ ] Send files
-[ ] Cover more platforms
-[ ] Python 3 support
+- ~~Encrypt the private keys and require a password to unlock~~
+- Make more efficient
+- Allow multiple users to connect
+- Send files
+- Cover more platforms
+- Python 3 support
 
 ### FAQ
 
 
 - What does Whisper protect against?
 
-..* When you send messages over the network they are at risk of being captured and read by a third party.  Whisper encrypts these messages using the RSA public key/private key scheme.
+  * When you send messages over the network they are at risk of being captured and read by a third party.  Whisper encrypts these messages using the RSA public key/private key scheme.
 
 - Why RSA?
 
-..* RSA has been proven to be a fairly solid scheme for encryption since the only easy way to decrypt or see the messages is by having the private key.
+  * RSA has been proven to be a fairly solid scheme for encryption since the only easy way to decrypt or see the messages is by having the private key.
 
 - Why decentralized?
 
-..* Choke points for web services have been shown to be large targets for adversaries.  When successfully attacked the collateral damagecan be large.  When decentralized it becomes much harder for an adversary to affect large amounts of users.
+  * Choke points for web services have been shown to be large targets for adversaries.  When successfully attacked the collateral damagecan be large.  When decentralized it becomes much harder for an adversary to affect large amounts of users.
 
 - What platforms will Whisper work on?
 
-..* Currently Whisper has been tested to work on Linux with Python 2.7.5 but as it develops it will cover more platforms.
+  * Currently Whisper has been tested to work on Linux with Python 2.7.5 but as it develops it will cover more platforms.
