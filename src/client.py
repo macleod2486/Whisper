@@ -31,11 +31,10 @@ privateKey = None
 publicKey = None
 username = "default"
 recipantUser = " "
+connected=0
 #Creates the socket
 clientSocket = None
 serverSocket = None
-#clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 host = socket.gethostname()
 port = 3333
 
@@ -43,13 +42,13 @@ port = 3333
 #Function that will take in commands 
 def Commands (arguments):
 	command = arguments.split(' ')
-
 	#Displays help menu when prompted
 	if command[0]=="help":
 		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
 		display.config(state="normal")
 		display.insert(END,"\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear\n/quit\n/keygen password password\n/unlock password\n")
 		display.config(state="disabled")
+
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
 		try:
@@ -68,8 +67,10 @@ def Commands (arguments):
 			display.insert(END,"\nConnected to "+recipantUser+"\n")
 			display.config(state="disabled")
 			clientSocket.send(username)
+			connected = 1
 		except Exception as e:
 			print("Error in connecting")
+			connected = 0
 			print(e)
 		#Then checks to see if the users public key exists
                 try:
@@ -110,6 +111,7 @@ def Commands (arguments):
 			display.config(state="disabled")
 	elif command[0] == 'unlock':
 		keyUnlock(command[1])
+
 	#Clears the text displayed in the chat window
 	elif command[0] == 'clear':
 		display.config(state="normal")
@@ -238,7 +240,7 @@ def sendMessage():
 		Commands("disconnect")
 		stopServer()
 		exit(1)
-	#If a command is issued then it will shoot it to the correc
+	#If a command is issued then it will shoot it to the command method
 	elif msg[0]=='/':
 		Commands(msg[1:])
 	#Attempts to send the message to the server
@@ -286,9 +288,6 @@ display.grid(row=0, column=0)
 
 startServer = Button(root, text = "Start Server", command=singleServer)
 startServer.grid(row=1, column=2)
-
-#stopServer = Button(root, text="Stop Server", command=singleServer)
-#stopServer.grid(row=1, column=2)
 
 root.mainloop()
 
