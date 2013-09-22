@@ -235,29 +235,32 @@ def sendMessage():
 	msg = input.get()
 	cliMsg = msg
 	input.delete(0,END)
-	#Quits the system and exits
-	if msg=="/quit":
-		Commands("disconnect")
-		stopServer()
-		exit(1)
-	#If a command is issued then it will shoot it to the command method
-	elif msg[0]=='/':
-		Commands(msg[1:])
-	#Attempts to send the message to the server
-	else:
-		try:
-			global clientSocket
-			msg=publicKey.encrypt(msg,2)
-			clientSocket.send(msg[0])
-			display.config(state="normal")
-			display.insert(END, username+":"+cliMsg+"\n")
-			display.config(state="disabled")
-			print(cliMsg)
-		except Exception as e:
-			display.config(state="normal")
-			display.insert(END, "Error in sending message\n")
-			display.config(state="disabled")
-			print("Error in sending message")
+	
+	if len(cliMsg) != 0:
+	
+		#Quits the system and exits
+		if msg=="/quit":
+			Commands("disconnect")
+			stopServer()
+			exit(1)
+		#If a command is issued then it will shoot it to the command method
+		elif msg[0]=='/':
+			Commands(msg[1:])
+		#Attempts to send the message to the server
+		else:
+			try:
+				global clientSocket
+				msg=publicKey.encrypt(msg,2)
+				clientSocket.send(msg[0])
+				display.config(state="normal")
+				display.insert(END, username+":"+cliMsg+"\n")
+				display.config(state="disabled")
+				print(cliMsg)
+			except Exception as e:
+				display.config(state="normal")
+				display.insert(END, "Error in sending message\n")
+				display.config(state="disabled")
+				print("Error in sending message")
 
 #Obtains the necessary info from config files
 try:
@@ -272,6 +275,7 @@ except Exception as e:
         exit(1)
 
 #--------------------------------------------------------------------------
+
 #Main running of the code
 root = Tk()
 root.title("Whisper")
