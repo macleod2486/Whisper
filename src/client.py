@@ -42,6 +42,8 @@ port = 3333
 #Function that will take in commands 
 def Commands (arguments):
 	command = arguments.split(' ')
+	print(str(command))
+
 	#Displays help menu when prompted
 	if command[0]=="help":
 		print("\nCommands available\n/connect ip/hostname portNo\n/disconnect\n/clear")
@@ -64,10 +66,14 @@ def Commands (arguments):
 			#Displays on who you are connected to
 			print("Connected to "+recipantUser)
 			display.config(state="normal")
-			display.insert(END,"\nConnected to "+recipantUser+"\n")
+			display.insert(END,"Connected to "+recipantUser+"\n")
 			display.config(state="disabled")
 			clientSocket.send(username)
 			connected = 1
+		except IndexError:
+			display.config(state="normal")
+			display.config(END,"Error: format for command is\n/connect hostname/ip port\n")
+			display.config(state="disabled")
 		except Exception as e:
 			print("Error in connecting")
 			connected = 0
@@ -103,12 +109,18 @@ def Commands (arguments):
 			display.config(state="disabled")
 	#Generates the keys with the password specified
 	elif command[0] == 'keygen':
-		if command[1] == command[2]:
-			keyCreate(command[1])
-		else:
+		try:
+			if command[1] == command[2]:
+				keyCreate(command[1])
+			else:
+				display.config(state="normal")
+				display.insert(END,"Error: passwords do not match\n")
+				display.config(state="disabled")
+		except IndexError:
 			display.config(state="normal")
-			display.insert(END,"Error: passwords do not match\n")
+			display.insert(END,"Error: Missing password or blank password\nFormat: /keygen <password> <password>\n")
 			display.config(state="disabled")
+	#Unlock keys
 	elif command[0] == 'unlock':
 		keyUnlock(command[1])
 
@@ -119,7 +131,7 @@ def Commands (arguments):
 		display.config(state="disabled")
 	else:
 		display.config(state="normal")
-		display.insert(END,"Error in selecting commands\n")
+		display.insert(END,"Error "+command[0]+"does not exist\n")
 		display.config(state="disabled")
 
 #Checks and/or creates keys
@@ -155,6 +167,7 @@ def keyUnlock(password):
 			display.insert(END,"Keys unlocked\n")
 			display.config(state="disabled")
 		except Exception as e:
+			print(str(e))
 			display.config(state="normal")
 			display.insert(END,"Error in unlocking key\nBad passphrase or file does not exist\nError"+str(e)+'\n')
 			display.config(state="disabled")
@@ -170,7 +183,6 @@ class Server(threading.Thread):
         
 		except Exception as e:
 		        print("Error in config file!"+str(e))
-	        #exit(1)
 
 		#Creates the sockets and waits for connections to show up
 		global serverSocket
