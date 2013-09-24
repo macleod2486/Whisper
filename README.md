@@ -17,6 +17,7 @@ This currently is still very alpha but will mature over time.  I will not recomm
 ### Current near future goals
 
 - ~~Encrypt the private keys and require a password to unlock~~
+- Fingerprint public keys
 - Make more efficient
 - Allow multiple users to connect
 - Send files
