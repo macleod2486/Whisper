@@ -1,2 +1,6 @@
 #Ignore all keys
 *.key
+#Ignore all compiled python files
+*.pyc
+#Ignore authorized keys
+authorized_keys
