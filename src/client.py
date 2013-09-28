@@ -95,23 +95,25 @@ def Commands (arguments):
 			display.config(state="normal")
 			display.config(END,"Error: format for command is\n/connect hostname/ip port\n")
 			display.config(state="disabled")
+			connected = False
 		except Exception as e:
 			display.config(state="normal")
 			display.insert(END,"Error in connecting\n")
 			display.config(state="disabled")
 			print("Error in connecting")
-			connected = 0
+			connected = False
 			print(e)
 		#Then checks to see if the users public key exists
                 try:
-	                #Checks for public key
-                        global publicKey
-                        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
-                        publicKey = RSA.importKey(checkPuFile.read())
-                        checkPuFile.close()
-			display.config(state="normal")
-			display.insert(END,'\n'+recipantUser+"'s public key being used\n")
-			display.config(state="disabled")
+			if connected:
+		                #Checks for public key
+	                        global publicKey
+	                        checkPuFile = open(os.path.dirname(__file__)+'/../keys/'+recipantUser+'pub.key','r')
+	                        publicKey = RSA.importKey(checkPuFile.read())
+	                        checkPuFile.close()
+				display.config(state="normal")
+				display.insert(END,'\n'+recipantUser+"'s public key being used\n")
+				display.config(state="disabled")
                 except Exception as e:
                         print("Error in obtaining users public key")
 			display.insert(END,"Error in obtaining"+recipantUser+"'s public key\n")
