@@ -31,10 +31,8 @@ class KeyCheckSum(object):
 			authorizedFile = open(os.path.dirname(__file__)+"/../etc/authorized_keys",'r')
 			for line in authorizedFile:
 				line = line.split(':')
-				print(line[1])
 				sum = line[1]
 				sum = sum[:-1]
-				print(sum)
 				if sum==md5sum:
 					exists = True
 			
