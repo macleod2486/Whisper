@@ -34,6 +34,8 @@ publicKey = None
 username = "default"
 recipantUser = " "
 connected = False
+unlocked = False
+
 #Creates the socket
 clientSocket = None
 serverSocket = None
@@ -43,6 +45,8 @@ servMd5 = None
 
 #Function that will take in commands 
 def Commands (arguments):
+	global unlocked
+
 	command = arguments.split(' ')
 
 	#Displays help menu when prompted
@@ -53,7 +57,7 @@ def Commands (arguments):
 		display.config(state="disabled")
 
 	#Attempts to connect to the server and obtain the username for their public key to be used
-	elif command[0]=="connect":
+	elif (command[0]=="connect") and unlocked:
 		try:
 			global recipantUser, clientSocket, servMd5
 			host = command[1]
@@ -151,7 +155,7 @@ def Commands (arguments):
 		display.config(state="disabled")
 	else:
 		display.config(state="normal")
-		display.insert(END,"Error "+command[0]+"does not exist\n")
+		display.insert(END,"Error "+command[0]+" either does not exist or you need to unlock your private key\n")
 		display.config(state="disabled")
 
 #Checks and/or creates keys
@@ -180,13 +184,14 @@ def keyCreate(password):
 #Attempts to unlock the keys
 def keyUnlock(password):
 		try:
-			global privateKey
+			global privateKey, unlocked
 			privateKeyFile = open(os.path.dirname(__file__)+'/../keys/'+username+'.key','r')
 			privateKey = RSA.importKey(privateKeyFile.read(),password)
 			privateKeyFile.close()
 			display.config(state="normal")
 			display.insert(END,"Keys unlocked\n")
 			display.config(state="disabled")
+			unlocked = True
 		except Exception as e:
 			print(str(e))
 			display.config(state="normal")
