@@ -17,6 +17,8 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from checksum import KeyCheckSum
+
 import socket
 import os.path
 import os
@@ -31,18 +33,17 @@ privateKey = None
 publicKey = None
 username = "default"
 recipantUser = " "
-connected=0
+connected = False
 #Creates the socket
 clientSocket = None
 serverSocket = None
 host = socket.gethostname()
 port = 3333
-
+servMd5 = None
 
 #Function that will take in commands 
 def Commands (arguments):
 	command = arguments.split(' ')
-	print(str(command))
 
 	#Displays help menu when prompted
 	if command[0]=="help":
@@ -54,7 +55,7 @@ def Commands (arguments):
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif command[0]=="connect":
 		try:
-			global recipantUser, clientSocket
+			global recipantUser, clientSocket, servMd5
 			host = command[1]
 			port = command[2]
 			clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -63,18 +64,37 @@ def Commands (arguments):
 			clientSocket.connect((host,int(port)))
 			recipantUser=clientSocket.recv(1024)
 			
+			
 			#Displays on who you are connected to
-			print("Connected to "+recipantUser)
 			display.config(state="normal")
 			display.insert(END,"Connected to "+recipantUser+"\n")
 			display.config(state="disabled")
+
+			#Sends the server your username
 			clientSocket.send(username)
-			connected = 1
+
+			#Recieves the checksum of the public key the server has
+			servMd5=clientSocket.recv(1024)
+			
+			#Checks to see if the key is currently stored		
+			md5=KeyCheckSum()
+			if md5.CurrentAuthorized(servMd5):
+				display.config(state="normal")
+				display.insert(END,"Host valid\n")
+				display.config(state="disabled")
+			else:
+				confim = AuthorizedHosts(root)
+				root.wait_window(confirm.top)
+
+			connected = True
 		except IndexError:
 			display.config(state="normal")
 			display.config(END,"Error: format for command is\n/connect hostname/ip port\n")
 			display.config(state="disabled")
 		except Exception as e:
+			display.config(state="normal")
+			display.insert(END,"Error in connecting\n")
+			display.config(state="disabled")
 			print("Error in connecting")
 			connected = 0
 			print(e)
@@ -157,6 +177,7 @@ def keyCreate(password):
 		print("Error creating keys")
 		print(e)
 
+#Attempts to unlock the keys
 def keyUnlock(password):
 		try:
 			global privateKey
@@ -171,6 +192,26 @@ def keyUnlock(password):
 			display.config(state="normal")
 			display.insert(END,"Error in unlocking key\nBad passphrase or file does not exist\nError"+str(e)+'\n')
 			display.config(state="disabled")
+
+class AuthorizedHosts:
+	def __init__(self,parent):
+		top = self.top = Toplevel(parent)
+		Label(top, text="Willing to add host to authorized file?").pack()
+		yesButton = Button(top, text="Yes", command = self.yes)
+		yesButton.pack()
+		noButton = Button(top, text="No", command = self.no)
+		noButton.pack()
+	def yes(self):
+		print("Yes selected!")
+		md5 = KeyCheckSum()
+		md5.WriteAuthorized(servMd5, username)
+		self.top.destroy()
+	def no(self):
+		print("No selected!")
+		clientSocket.shutdown(1)
+		self.top.destroy()
+
+
 #Server class
 class Server(threading.Thread):
 	def run(self):
@@ -203,6 +244,12 @@ class Server(threading.Thread):
 		#Sends and recieves messages from the client
 		c.send(username)
 		senderUsername=c.recv(1024)
+		
+		#Gets and sends the md5sum of the public file
+		md5 = KeyCheckSum()
+		md5Pub=md5.Sum(recipantUser)
+		c.send(md5Pub)
+
 		while True:
 	        	clientMess=c.recv(1024) 
 		        if not clientMess:
@@ -217,7 +264,9 @@ class Server(threading.Thread):
 					display.insert(END,senderUsername+":"+clientMess+'\n')
 					display.config(state="disabled")
 		                except Exception as e:
-		                        print("Error in key"+str(e))
+		                        display.config(state="normal")
+					display.insert(END,"Error: Either your private key is not unlocked or socket busy\n")
+					display.config(state="disabled")
 		                        break
 		serverSocket.close()
 		print ("Server closed")
@@ -226,6 +275,8 @@ class Server(threading.Thread):
 def singleServer():
 	server = Server()
 	server.start()
+
+#Stops both the server and client
 def stopServer():
 	try:
 		serverSocket.shutdown(2)
