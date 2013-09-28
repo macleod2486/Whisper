@@ -9,15 +9,15 @@ This currently is still very alpha but will mature over time.  I will not recomm
 
 ### Instructions
 
-- Just start the client file in the src
-- Configure your username within the file in the etc/ directory
+- Configure your username within the file in the etc/ directory and the port you want your server to listen off of
+- Start the file named client.py within the src/ directory
 - Then generate your keys, then give the public key file with a .pub extension to your friend/relative/someone you're going to chat with and vice versa.  
 - Once complete start the server with the server button then connect to your friends server.
 
 ### Current near future goals
 
 - ~~Encrypt the private keys and require a password to unlock~~
-- Fingerprint public keys
+- ~~Fingerprint public keys~~
 - Make more efficient
 - Allow multiple users to connect
 - Send files
