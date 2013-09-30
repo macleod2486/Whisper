@@ -35,6 +35,7 @@ username = "default"
 recipantUser = " "
 connected = False
 unlocked = False
+serverStarted = False
 
 #Creates the socket
 clientSocket = None
@@ -93,7 +94,7 @@ def Commands (arguments):
 			connected = True
 		except IndexError:
 			display.config(state="normal")
-			display.config(END,"Error: format for command is\n/connect hostname/ip port\n")
+			display.insert(END,"Error: format for command is\n/connect hostname/ip port\n")
 			display.config(state="disabled")
 			connected = False
 		except Exception as e:
@@ -233,7 +234,7 @@ class Server(threading.Thread):
 		        print("Error in config file!"+str(e))
 
 		#Creates the sockets and waits for connections to show up
-		global serverSocket
+		global serverSocket, serverStarted
 		serverSocket = socket.socket()
 		serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		serverSocket.bind((host,int(port)))
@@ -241,7 +242,7 @@ class Server(threading.Thread):
 		display.config(state="normal")
 		display.insert(END,"Server started\n")
 		display.config(state="disabled")
-		
+		serverStarted = True	
 		serverSocket.listen(1)
 		c,addr = serverSocket.accept()
 		
@@ -256,7 +257,6 @@ class Server(threading.Thread):
 		md5 = KeyCheckSum()
 		md5Pub=md5.Sum(recipantUser)
 		c.send(md5Pub)
-
 		while True:
 	        	clientMess=c.recv(1024) 
 		        if not clientMess:
@@ -276,12 +276,15 @@ class Server(threading.Thread):
 					display.config(state="disabled")
 		                        break
 		serverSocket.close()
+		serverStarted = False
 		print ("Server closed")
 
 #Server function
 def singleServer():
-	server = Server()
-	server.start()
+	global serverStarted
+	if  serverStarted==False:
+		server = Server()
+		server.start()
 
 #Stops both the server and client
 def stopServer():
