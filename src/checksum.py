@@ -25,7 +25,7 @@ class KeyCheckSum(object):
 		return md5sumValue
 
 	#Gets the current md5sum
-	def CurrentAuthorized(self,md5sum):
+	def CurrentAuthorized(self,username,md5sum):
 		exists = False
 		try:
 			authorizedFile = open(os.path.dirname(__file__)+"/../etc/authorized_keys",'r')
@@ -33,7 +33,7 @@ class KeyCheckSum(object):
 				line = line.split(':')
 				sum = line[1]
 				sum = sum[:-1]
-				if sum==md5sum:
+				if sum==md5sum and line[0]==username:
 					exists = True
 			
 			authorizedFile.close()

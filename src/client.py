@@ -83,7 +83,7 @@ def Commands (arguments):
 			
 			#Checks to see if the key is currently stored		
 			md5=KeyCheckSum()
-			if md5.CurrentAuthorized(servMd5):
+			if md5.CurrentAuthorized(recipantUser,servMd5):
 				display.config(state="normal")
 				display.insert(END,"Host valid\n")
 				display.config(state="disabled")
