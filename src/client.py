@@ -41,6 +41,7 @@ serverStarted = False
 clientSocket = None
 serverSocket = None
 host = socket.gethostname()
+clienthost = None
 port = 3333
 servMd5 = None
 
@@ -60,13 +61,13 @@ def Commands (arguments):
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif (command[0]=="connect") and unlocked:
 		try:
-			global recipantUser, clientSocket, servMd5
-			host = command[1]
+			global recipantUser, clientSocket, servMd5, clienthost
+			clienthost = command[1]
 			port = command[2]
 			clientSocket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			clientSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		
-			clientSocket.connect((host,int(port)))
+			clientSocket.connect((clienthost,int(port)))
 			recipantUser=clientSocket.recv(1024)
 			
 			
@@ -83,13 +84,13 @@ def Commands (arguments):
 			
 			#Checks to see if the key is currently stored		
 			md5=KeyCheckSum()
-			if md5.CurrentAuthorized(recipantUser,servMd5):
+			if md5.CurrentAuthorized(clienthost,servMd5):
 				display.config(state="normal")
 				display.insert(END,"Host valid\n")
 				display.config(state="disabled")
 			else:
-				confim = AuthorizedHosts(root)
-				root.wait_window(confirm.top)
+				authorizedHost = AuthorizedHosts(root)
+				root.wait_window(authorizedHost.top)
 
 			connected = True
 		except IndexError:
@@ -212,7 +213,7 @@ class AuthorizedHosts:
 	def yes(self):
 		print("Yes selected!")
 		md5 = KeyCheckSum()
-		md5.WriteAuthorized(servMd5, username)
+		md5.WriteAuthorized(servMd5, clienthost)
 		self.top.destroy()
 	def no(self):
 		print("No selected!")
