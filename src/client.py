@@ -303,6 +303,9 @@ def stopClient():
         except:
                 print("No connection")
                 
+def enterInput(self):
+	sendMessage()
+
 #Takes in user commands and messages
 def sendMessage():
 	
@@ -359,6 +362,7 @@ sendButton.grid(row=1, column=1)
 
 input = Entry(root, width=60)
 input.grid(row=1,column=0)
+input.bind("<Return>",enterInput)
 
 display = Text(root, width=60, height=40)
 display.configure(state="disabled")
