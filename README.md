@@ -24,6 +24,10 @@ This currently is still very alpha but will mature over time.  I will not recomm
 - Cover more platforms
 - Python 3 support
 
+### Requirements
+
+- Please check imports at the beginning of the file to makes sure you have the necessary libraries installed.
+
 ### FAQ
 
 
