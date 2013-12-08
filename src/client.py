@@ -23,6 +23,7 @@ import socket
 import os.path
 import os
 import linecache
+import netifaces
 from Tkinter import *
 import threading
 from Crypto.PublicKey import RSA
@@ -40,7 +41,8 @@ serverStarted = False
 #Creates the socket
 clientSocket = None
 serverSocket = None
-host = socket.gethostname()
+interface = None
+host = None
 clienthost = None
 port = 3333
 servMd5 = None
@@ -345,7 +347,11 @@ try:
         username = username.split('=',1)[1]
         username = username[:-1]
         print("Username is "+username)
-
+	interface = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',4)
+	interface = interface.split('=',1)[1]
+	interface = interface[:-1]
+	host = netifaces.ifaddresses(interface)[2][0]['addr']
+	print(host)
 except Exception as e:
         print("Error in config file!")
 	print(e)
