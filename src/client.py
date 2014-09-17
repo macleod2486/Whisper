@@ -21,6 +21,7 @@ from checksum import KeyCheckSum
 from Crypto.PublicKey import RSA
 from getpass import getpass
 from keys import KeyManager
+from server import Server
 
 import socket
 import os.path
@@ -29,6 +30,8 @@ import linecache
 import netifaces
 import threading
 import Crypto.PublicKey.RSA
+
+serverInstance = None
 
 #Obtaining the key
 keymanage = None
@@ -60,7 +63,7 @@ def Commands (arguments):
 
 	#Displays help menu when prompted
 	if command[0] == "help":
-		print("\nCommands available\nconnect ip hostname portNo\ndisconnect\nkeygen password password\nunlock password\nclear")
+		print("\nCommands available\nconnect ip hostname portNo\ndisconnect\nkeygen password password\nunlock password\nclear\nstartserver\nstopserver")
 
 	#Attempts to connect to the server and obtain the username for their public key to be used
 	elif (command[0] == "connect") and unlocked:
@@ -131,62 +134,48 @@ def Commands (arguments):
 
 	elif command[0] == 'clear':
 		os.system('clear')
+	elif command[0] == 'startserver':
+		startServer()
+	elif command[0] == 'stopserver':
+		stopServer()
 	else:
-		print("Error in key")
+		print("Command not found")
+		print("\nCommands available\nconnect ip hostname portNo\ndisconnect\nkeygen password password\nunlock password\nclear\nstartserver\nstopserver")
 
 #Server function
-def singleServer():
-
-	global serverStarted
-
-	if  serverStarted==False:
-		server = Server()
-		server.start()
+def startServer():
+	serverInstance.startServer()
+	print("Server started")
 
 #Stops both the server and client
 def stopServer():
+	serverInstance.stopServer()
 	print ("Server stopped")
 
 #Takes in user commands and messages
 def sendMessage():
-	
-	msg = input.get()
-	cliMsg = msg
-	input.delete(0,END)
-	
-	if len(cliMsg) != 0:
-	
-		#Quits the system and exits
-		if msg == "/quit":
-			Commands("disconnect")
-			stopServer()
-			exit(1)
-		#If a command is issued then it will shoot it to the command method
-		elif msg[0] == '/':
-			Commands(msg[1:])
-		#Attempts to send the message to the server
-		else:
-			try:
-				global clientSocket
-				msg=publicKey.encrypt(msg,2)
-				clientSocket.send(msg[0])
-				print(cliMsg)
-			except Exception as e:
-				print("Error in sending message")
+	print("Message sent")
 
 #Obtains the necessary info from config files
 try:
         username = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',2)
         username = username.split('=',1)[1]
         username = username[:-1]
+
         print("Username is "+username)
+
 	interface = linecache.getline(os.path.dirname(__file__)+'/../etc/whisper.cfg',4)
 	interface = interface.split('=',1)[1]
 	interface = interface[:-1]
+
 	print("Interface "+interface)
+
 	host = netifaces.ifaddresses(interface)[2][0]['addr']
+
 	print(host)
+
 	keymanage = KeyManager(username)
+
 	print("\nFinished loading information from config file")
 except Exception as e:
         print("Error in config file!")
@@ -200,6 +189,8 @@ except Exception as e:
 print ("\n******************************")
 print ("Welcome to the Whisper program")
 print ("Type in help for the help menu")
+
+serverInstance = Server()
 
 while(1):
 	command = raw_input("> ")
