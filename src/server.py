@@ -48,6 +48,7 @@ class Server():
 
 		#Creates the sockets and waits for connections to show up
 		print(interface)
+
 		self.host = netifaces.ifaddresses(interface)[2][0]['addr']
 
 		self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -57,5 +58,6 @@ class Server():
 		print("Listening on port "+serverPort) 
 
 	def stopServer(self):
-		print("Socket closed")
-		self.serverSocket.close()
+		if self.serverSocket != None:
+			self.serverSocket.close()
+			print("Socket closed")
