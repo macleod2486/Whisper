@@ -17,6 +17,8 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
+from threading import Thread
+
 import socket
 import netifaces
 import linecache
@@ -24,10 +26,14 @@ import os
 import os.path
 
 #Server class
-class Server():
+class Server(Thread):
 
 	serverSocket = None
 	host = None
+	keepServerRunning = True	
+
+	def run(self):
+		self.startServer()
 
 	def startServer(self):
 		serverPort = None
@@ -54,10 +60,14 @@ class Server():
 		self.serverSocket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 		self.serverSocket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.serverSocket.bind((self.host, int(serverPort)))
-		
+
+		while self.keepServerRunning:
+			data, server = self.serverSocket.recvfrom(1024);
+			print(data)
 		print("Listening on port "+serverPort) 
 
 	def stopServer(self):
 		if self.serverSocket != None:
 			self.serverSocket.close()
-			print("Socket closed")
+			self.keepServerRunning = False
+			print("Socket closed "+getTCPInfo(self.serverSocket))

@@ -17,9 +17,10 @@
 #    with this program; if not, write to the Free Software Foundation, Inc.,
 #    51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
 
-from checksum import KeyCheckSum
 from Crypto.PublicKey import RSA
 from getpass import getpass
+
+from checksum import KeyCheckSum
 from keys import KeyManager
 from server import Server
 
@@ -31,8 +32,6 @@ import linecache
 import netifaces
 import threading
 import Crypto.PublicKey.RSA
-
-serverInstance = None
 
 #Obtaining the key
 keymanage = None
@@ -54,6 +53,8 @@ host = None
 clienthost = None
 port = 3333
 servMd5 = None
+
+server = None 
 
 #Function that will take in commands 
 def Commands (arguments):
@@ -101,12 +102,17 @@ def Commands (arguments):
 
 #Server function
 def startServer():
-	serverInstance.startServer()
-	print("Server started")
+	if not serverStarted:
+		server = Server()
+		server.daemon = True
+		server.start()	
+		print("Server started")
 
 #Stops both the server and client
 def stopServer():
-	serverInstance.stopServer()
+	if serverStarted:
+		server.stopServer()
+		server._stop()
 
 #Takes in user commands and messages
 def sendMessage():
@@ -146,8 +152,6 @@ except Exception as e:
 print ("\n******************************")
 print ("Welcome to the Whisper program")
 print ("Type in help for the help menu")
-
-serverInstance = Server()
 
 while(1):
 	command = raw_input("> ")
