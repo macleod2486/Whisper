@@ -52,7 +52,10 @@ class KeyManager:
 				publicKeyFile.write(publicKey.exportKey())
 				publicKeyFile.close()
 				print("Keys create")
+				
+				#Reset the key values
 				privateKey = None
+				publicKey = None
 			except Exception as e:
 				print("Error in creating keys")
 				print(e)
@@ -74,9 +77,28 @@ class KeyManager:
 				print("Error in unlocking key")
 				print(str(e))
 
+	#Gets the privatekey
 	def getPrivateKey():
-
 		print("Private key recieved")
 		return privateKey
+
+	#Gets the public key
+	def getPublicKey(self,username):
+		publicKey = None
+
+		#Attempts to obtain the public key for the user
+		try:
+			with open('../etc/users.cfg','r') as userList:
+				for user in userList:
+					if user.startswith(username):
+						keyfilename = user.split(':')[2]
+						publicKey = open('../keys/'+keyfilename,'r').read()
+						return publicKey
+		except Exception as e:
+			print("Error in getting public key check for key or configuration")
+			print(e)
+
+		return None
+
 	def isUnlocked():
 		return self.unlocked
