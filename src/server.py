@@ -31,11 +31,13 @@ class Server(Thread):
 	serverSocket = None
 	host = None
 	keepServerRunning = True	
+	privateKey = None
 
 	def run(self):
 		self.startServer()
 
 	def startServer(self):
+		print("Starting server")
 		serverPort = None
 		interface = None
 
@@ -53,7 +55,8 @@ class Server(Thread):
 		        print("Error in config file!"+str(e))
 
 		#Creates the sockets and waits for connections to show up
-		print(interface)
+
+		print("Listening on port "+serverPort) 
 
 		self.host = netifaces.ifaddresses(interface)[2][0]['addr']
 
@@ -64,10 +67,12 @@ class Server(Thread):
 		while self.keepServerRunning:
 			data, server = self.serverSocket.recvfrom(1024);
 			print(data)
-		print("Listening on port "+serverPort) 
 
 	def stopServer(self):
 		if self.serverSocket != None:
 			self.serverSocket.close()
 			self.keepServerRunning = False
 			print("Socket closed "+getTCPInfo(self.serverSocket))
+
+	def setPrivateKey(self, privateKey):
+		self.privateKey = privateKey
