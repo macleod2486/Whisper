@@ -64,21 +64,22 @@ class KeyManager:
 	
 	#Attempts to unlock the keys
 	def keyUnlock(self):
-
-			try:
-				global privateKey, unlocked
-				password = getpass("Enter password: ")
-				privateKeyFile = open(os.path.dirname(__file__)+'/../keys/'+self.username+'.key','r')
-				privateKey = RSA.importKey(privateKeyFile.read(),password)
-				privateKeyFile.close()
-				self.unlocked = True
-				print("Private key loaded")
-			except Exception as e:
-				print("Error in unlocking key")
-				print(str(e))
+		try:
+			global privateKey, unlocked
+			password = getpass("Enter password: ")
+			privateKeyFile = open(os.path.dirname(__file__)+'/../keys/'+self.username+'.key','r')
+			privateKey = RSA.importKey(privateKeyFile.read(),password)
+			privateKeyFile.close()
+			self.unlocked = True
+			return True
+			print("Private key loaded")
+		except Exception as e:
+			print("Error in unlocking key")
+			print(str(e))
+			return False
 
 	#Gets the privatekey
-	def getPrivateKey():
+	def getPrivateKey(self):
 		print("Private key recieved")
 		return privateKey
 
